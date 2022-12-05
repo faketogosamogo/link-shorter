@@ -44,13 +44,13 @@ public static class CreateShortLink
         
         public async Task<ShortLink> Handle(Command command, CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Получен запрос на создание сокращенной ссылки для URL: {Url}", command.Url);
+            _logger.LogDebug("Started creating short link by url: {Url}", command.Url);
 
             var shortLinkWithSameUrl = await _shortLinkRepository.GetShortLinkByUrl(command.Url, cancellationToken);
 
             if (shortLinkWithSameUrl != null)
             {
-                _logger.LogDebug("При запросе на создание сокращенной ссылки для URL: {Url} была возвращена существующая сокращенная ссылка c токеном: {Token}", command.Url, shortLinkWithSameUrl.Token);
+                _logger.LogDebug("Short link by Url: {Url} was not created, returned short link: {ShortLinkId} with same Url ", command.Url, shortLinkWithSameUrl.Id);
 
                 return shortLinkWithSameUrl;
             }
@@ -64,7 +64,7 @@ public static class CreateShortLink
             {
                 if (countOfTokenRegeneration > 2)
                 {
-                    var applicationEx = new InvalidTokenGenerationException("При запросе на создание сокращенной ссылки для URL: {0} повторная генерация токена привысила допустимое количество попыток", command.Url);
+                    var applicationEx = new InvalidTokenGenerationException("Count of token regeneration attempts was exceeded for Url: {0}", shortLink.Url);
                     
                     _logger.LogError(applicationEx, applicationEx.Message);
 
@@ -74,20 +74,20 @@ public static class CreateShortLink
                 shortLink.RegenerateToken(_shortLinkOptions.TokenLength);
                 countOfTokenRegeneration++;
                 
-                _logger.LogDebug("При запросе на создание сокращенной ссылки для URL: {Url} произошла повторная генерация токена", command.Url);
+                _logger.LogDebug("Token regeneration for: {Url}", shortLink.Url);
             }
 
-            _logger.LogDebug("При запросе на создание сокращенной ссылки для URL: {Url} была создана сокращенная ссылка c токеном: {Token}", command.Url, shortLink.Token);
+            _logger.LogDebug("Short link was created for url: {Url} with Token: {Token}", shortLink.Url, shortLink.Token);
 
             try
             {
                 await _shortLinkRepository.AddShortLink(shortLink, cancellationToken);
                 
-                _logger.LogInformation("При запросе на создание сокращенной ссылки для URL: {Url} была сохранена сокращенная ссылка c токеном: {Token}", command.Url, shortLink.Token);
+                _logger.LogInformation("Short link for URL: {Url} was saved with Token: {Token} and Id: {ShortLinkId}", shortLink.Url, shortLink.Token, shortLink.Id);
             }
             catch (Exception ex)
             {
-                var applicationEx = new ShortLinkSavingException(ex, "Ошибка добавления созданной сокращенной ссылки для URL: {0}", command.Url);
+                var applicationEx = new ShortLinkSavingException(ex, "Saving short link with URL: {0} and Token: {1} error", shortLink.Url, shortLink.Token);
                 
                 _logger.LogError(applicationEx, applicationEx.Message);
 

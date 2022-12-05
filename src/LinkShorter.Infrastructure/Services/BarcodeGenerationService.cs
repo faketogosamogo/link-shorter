@@ -9,7 +9,7 @@ public class BarcodeGenerationService : IBarcodeGenerationService
        var barcode = BarcodeWriter.CreateBarcode(url, BarcodeWriterEncoding.QRCode);
        // TODO: toPngStream() inside uses using, so returned stream was closed
        
-       return new MemoryStream(barcode.ToPngBinaryData());
+       return new MemoryStream(barcode.ToPngBinaryData(), false);
     }
        
 }

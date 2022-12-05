@@ -26,20 +26,20 @@ public static class GetShortLinkByToken
         
         public async Task<ShortLink> Handle(Query query, CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Получен запрос на получение сокращенной ссылки по токену: {Token}", query.Token);
+            _logger.LogDebug("Started getting short link by token: {Token}", query.Token);
             
             var shortLink = await _shortLinkRepository.GetShortLinkByToken(query.Token, cancellationToken);
 
             if (shortLink == null)
             {
-                var applicationEx = new ShortLinkNotFoundException("Сокращенная ссылка не была найдена при получении запроса на получение сокращенной ссылки по токену: {0}", query.Token);
+                var applicationEx = new ShortLinkNotFoundException("Short link by token: {0} was not found", query.Token);
                 
                 _logger.LogDebug(applicationEx, applicationEx.Message);
 
                 throw applicationEx;
             }
 
-            _logger.LogDebug("Сокращенная ссылка была найдена при получении запроса на получение сокращенной ссылки по токену: {Token}", query.Token);
+            _logger.LogDebug("Short link by token: {Token} was found with Id: {ShortLinkId}", shortLink.Token, shortLink.Id);
 
             return shortLink;
         }

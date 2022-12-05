@@ -78,7 +78,14 @@ public class GetOrCreateBarcodeByShortLinkTokenTests
         result
             .Should()
             .BeReadable();
-        
+
+        await using var resultStream = new MemoryStream();
+        await result.CopyToAsync(resultStream);
+
+        resultStream.ToArray()
+            .Should()
+            .BeEquivalentTo(barcodeStream.ToArray());
+
         barcodeInfoRepositoryMock
             .Verify(
                 c => 
@@ -159,6 +166,13 @@ public class GetOrCreateBarcodeByShortLinkTokenTests
         result
             .Should()
             .BeReadable();
+        
+        await using var resultStream = new MemoryStream();
+        await result.CopyToAsync(resultStream);
+
+        resultStream.ToArray()
+            .Should()
+            .BeEquivalentTo(barcodeStream.ToArray());
     }
     
     [Test]

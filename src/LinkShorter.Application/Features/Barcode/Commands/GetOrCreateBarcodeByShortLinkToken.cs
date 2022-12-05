@@ -49,13 +49,13 @@ public static class GetOrCreateBarcodeByShortLinkToken
         
         public async Task<Stream> Handle(Command command, CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Получен запрос на создание/получение QR кода по токену: {Token}", command.ShortLinkToken);
+            _logger.LogDebug("Started getting/creating qr Code for short link with token: {Token}", command.ShortLinkToken);
 
             var shortLink = await _shortLinkRepository.GetShortLinkByToken(command.ShortLinkToken, cancellationToken);
 
             if (shortLink == null)
             {
-                var applicationEx = new ShortLinkNotFoundException("При получении/создании QR кода для короткой ссылки по токену: {0} короткая ссылка не была найдена", command.ShortLinkToken);
+                var applicationEx = new ShortLinkNotFoundException("Short link with token: {0} was not found", command.ShortLinkToken);
                 
                 _logger.LogDebug(applicationEx, applicationEx.Message);
 
@@ -74,7 +74,7 @@ public static class GetOrCreateBarcodeByShortLinkToken
                 {
                     barcodeReadStream = _barcodeGenerationService.GenerateAsImageStream(barcodeGenerationUrl);
                     
-                    _logger.LogDebug("При получении запроса на создание/получение QR кода по токену: {Token} был сгенерирован новый QR код", command.ShortLinkToken);
+                    _logger.LogDebug("Generated new QR code for short link: {ShortLinkId}", shortLink.Id);
                 }
                 catch (Exception ex)
                 {
@@ -83,7 +83,7 @@ public static class GetOrCreateBarcodeByShortLinkToken
                         await barcodeReadStream.DisposeAsync();   
                     }
                 
-                    var applicationEx = new BarcodeGenerationException(ex, "Ошибка генерации QR кода для Url: {0}", barcodeGenerationUrl);
+                    var applicationEx = new BarcodeGenerationException(ex, "QR code for short link: {0} generation error", shortLink.Id);
                 
                     _logger.LogError(applicationEx, applicationEx.Message);
 
@@ -97,13 +97,13 @@ public static class GetOrCreateBarcodeByShortLinkToken
                     await _barcodeStorageService.SaveBarcode(barcodeReadStream, barcodeSavePath, cancellationToken);
                     barcodeReadStream.Position = 0;
                     
-                    _logger.LogDebug("При получении запроса на создание/получение QR кода по токену: {Token} был сохранен сгенерированый QR код", command.ShortLinkToken);
+                    _logger.LogDebug("QR code was saved for short link: {ShortLinkId}", shortLink.Id);
                 }
                 catch (Exception ex)
                 {
                     await barcodeReadStream.DisposeAsync();
 
-                    var applicationEx = new BarcodeSavingException(ex, "Ошибка cохранения QR кода для Url: {0}", barcodeGenerationUrl);
+                    var applicationEx = new BarcodeSavingException(ex, "QR code for short link: {0} saving error", shortLink.Id);
                 
                     _logger.LogError(applicationEx, applicationEx.Message);
 
@@ -116,11 +116,11 @@ public static class GetOrCreateBarcodeByShortLinkToken
                 {
                     await _barcodeInfoRepository.AddBarcodeInfo(barcodeInfo, cancellationToken);
                     
-                    _logger.LogInformation("При получении запроса на создание/получение QR кода по токену: {Token} была сохранена информация о сохраненном и сгенерированном QR коде", command.ShortLinkToken);
+                    _logger.LogInformation("Barcode info for short link: {ShortLinkId} was saved", shortLink.Id);
                 }
                 catch (Exception ex)
                 {
-                    var applicationEx = new BarcodeInfoSavingException(ex, "Ошибка cохранения информации о QR коде для Url: {0}", barcodeGenerationUrl);
+                    var applicationEx = new BarcodeInfoSavingException(ex, "Barcode info for short link: {0} saving error", shortLink.Id);
                 
                     _logger.LogError(applicationEx, applicationEx.Message);
 
@@ -133,11 +133,11 @@ public static class GetOrCreateBarcodeByShortLinkToken
                 {
                     barcodeReadStream = _barcodeStorageService.ReadBarcode(barcodeInfo.Path);
                     
-                    _logger.LogDebug("При получении запроса на создание/получение QR кода по токену: {Token} был считан существующий Qr код", command.ShortLinkToken);
+                    _logger.LogDebug("Qr code was read for short link: {ShortLinkId}", shortLink.Id);
                 }
                 catch (Exception ex)
                 {
-                    var applicationEx = new BarcodeReadingException(ex, "Ошибка чтения QR кода по токену: {0}", shortLink.Token);
+                    var applicationEx = new BarcodeReadingException(ex, "Qr code for short link: {0} reading error", shortLink.Id);
                     
                     _logger.LogError(applicationEx, applicationEx.Message);
 
