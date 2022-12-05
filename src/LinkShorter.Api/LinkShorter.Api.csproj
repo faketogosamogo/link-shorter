@@ -23,7 +23,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LinkShorter.Application\LinkShorter.Application.csproj" />
       <ProjectReference Include="..\LinkShorter.Infrastructure\LinkShorter.Infrastructure.csproj" />
     </ItemGroup>
 
